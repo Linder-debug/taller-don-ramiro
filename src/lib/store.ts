@@ -199,11 +199,12 @@ export function useStore() {
 
   const decideApproval = useCallback(async (_orderId: string, approvalId: string, decision: 'aprobada' | 'rechazada', token?: string) => {
     if (!token) throw new Error('El enlace de seguimiento no es válido.');
-    await readError(await supabase.rpc('submit_approval_decision', {
+    const decided = await readError(await supabase.rpc('submit_approval_decision', {
       p_token: token,
       p_approval_id: approvalId,
       p_decision: decision,
     }));
+    if (decided !== true) throw new Error('No se pudo registrar la decisión. Recarga el enlace e inténtalo de nuevo.');
   }, []);
 
   const createOrder = useCallback(async (input: {
