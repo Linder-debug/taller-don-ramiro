@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   Wrench, Plus, ClipboardList, Users, AlertTriangle, CheckCircle2, X, Car,
-  UserCog, FileText, Clock, Phone, Trash2, RefreshCw,
+  UserCog, FileText, Clock, Phone, Trash2, RefreshCw, MessageCircle,
 } from 'lucide-react';
 import type { Store } from '@/lib/store';
 import type { Order, OrderStatus } from '@/types';
@@ -9,6 +9,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { QuoteCard } from '@/components/QuoteCard';
 import { STATUS_CONFIG, statusIndex, STATUS_ORDER } from '@/lib/status';
 import { formatDateTime, timeAgo, formatMoney, elapsedSince } from '@/lib/format';
+import { openWhatsApp } from '@/lib/whatsapp';
 
 export function AdminView({ store }: { store: Store }) {
   const [tab, setTab] = useState<'ordenes' | 'pendientes' | 'nueva'>('ordenes');
@@ -26,7 +27,7 @@ export function AdminView({ store }: { store: Store }) {
         <div className="mx-auto max-w-2xl">
           <div className="flex items-center gap-2 text-emerald-400">
             <Wrench className="h-5 w-5" />
-            <span className="text-sm font-semibold uppercase tracking-wider">Taller de Don Ramiro</span>
+            <span className="text-sm font-semibold uppercase tracking-wider">Taller Don Ramiro</span>
           </div>
           <h1 className="mt-2 text-3xl font-extrabold">Panel de administración</h1>
           <p className="mt-1 text-slate-300">Don Ramiro — gestiona órdenes, mecánicos y cotizaciones.</p>
@@ -67,22 +68,18 @@ function AdminOrdersList({ orders, onOpen }: { orders: Order[]; onOpen: (o: Orde
         const latest = o.history[o.history.length - 1];
         const hasPending = o.approvals.some((a) => a.status === 'pendiente');
         return (
-          <button
-            key={o.id}
-            onClick={() => onOpen(o)}
-            className="flex w-full items-center gap-3 rounded-xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-200 transition hover:ring-emerald-300"
-          >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-xl">{cfg.emoji}</div>
-            <div className="min-w-0 flex-1">
-              <p className="font-bold text-slate-900">{o.vehicle.make} {o.vehicle.model} <span className="font-normal text-slate-400">· {o.vehicle.plate}</span></p>
-              <p className="text-sm text-slate-500">{o.code} · {o.clientName} · {o.mechanicName ?? 'Sin asignar'}</p>
-              <div className="mt-1.5 flex items-center gap-2">
-                <StatusBadge status={o.status} size="sm" />
-                {hasPending && <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-700">Cotización pendiente</span>}
+          <div key={o.id} className="flex w-full items-center gap-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 transition hover:ring-emerald-300">
+            <button onClick={() => onOpen(o)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xl">{cfg.emoji}</div>
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-slate-900">{o.vehicle.make} {o.vehicle.model} <span className="font-normal text-slate-400">· {o.vehicle.plate}</span></p>
+                <p className="text-sm text-slate-500">{o.code} · {o.clientName} · {o.mechanicName ?? 'Sin asignar'}</p>
+                <div className="mt-1.5 flex items-center gap-2"><StatusBadge status={o.status} size="sm" />{hasPending && <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-700">Cotización pendiente</span>}</div>
               </div>
-            </div>
-            {latest && <span className="hidden text-xs text-slate-400 sm:block">{elapsedSince(latest.at)}</span>}
-          </button>
+              {latest && <span className="hidden text-xs text-slate-400 sm:block">{elapsedSince(latest.at)}</span>}
+            </button>
+            <button onClick={() => openWhatsApp(o)} aria-label={`Escribir por WhatsApp a ${o.clientName}`} className="flex min-h-12 shrink-0 items-center gap-1.5 rounded-xl bg-green-600 px-3 text-sm font-bold text-white hover:bg-green-500"><MessageCircle className="h-4 w-4" /> <span className="hidden sm:inline">WhatsApp</span></button>
+          </div>
         );
       })}
     </div>
@@ -104,18 +101,13 @@ function AdminPending({ orders, onOpen }: { orders: Order[]; onOpen: (o: Order) 
       {orders.map((o) => {
         const ap = o.approvals.find((a) => a.status === 'pendiente');
         return (
-          <button
-            key={o.id}
-            onClick={() => onOpen(o)}
-            className="flex w-full items-center gap-3 rounded-xl border-2 border-orange-200 bg-orange-50 p-4 text-left transition hover:border-orange-400"
-          >
-            <AlertTriangle className="h-6 w-6 shrink-0 text-orange-500" />
-            <div className="min-w-0 flex-1">
-              <p className="font-bold text-slate-900">{o.vehicle.make} {o.vehicle.model} · {o.vehicle.plate}</p>
-              <p className="text-sm text-slate-600">{o.code} · {o.clientName}</p>
-              {ap && <p className="mt-1 text-sm font-semibold text-orange-800">Cotización: {formatMoney(ap.amount)}</p>}
-            </div>
-          </button>
+          <div key={o.id} className="flex w-full items-center gap-3 rounded-xl border-2 border-orange-200 bg-orange-50 p-4 transition hover:border-orange-400">
+            <button onClick={() => onOpen(o)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+              <AlertTriangle className="h-6 w-6 shrink-0 text-orange-500" />
+              <div className="min-w-0 flex-1"><p className="font-bold text-slate-900">{o.vehicle.make} {o.vehicle.model} · {o.vehicle.plate}</p><p className="text-sm text-slate-600">{o.code} · {o.clientName}</p>{ap && <p className="mt-1 text-sm font-semibold text-orange-800">Cotización: {formatMoney(ap.amount)}</p>}</div>
+            </button>
+            <button onClick={() => openWhatsApp(o)} aria-label={`Escribir por WhatsApp a ${o.clientName}`} className="flex min-h-12 shrink-0 items-center gap-1.5 rounded-xl bg-green-600 px-3 text-sm font-bold text-white hover:bg-green-500"><MessageCircle className="h-4 w-4" /><span className="hidden sm:inline">WhatsApp</span></button>
+          </div>
         );
       })}
     </div>
@@ -133,21 +125,29 @@ function NewOrderForm({ store, onCreated }: { store: Store; onCreated: (o: Order
   const [complaint, setComplaint] = useState('');
   const [mechanicId, setMechanicId] = useState<string>('');
   const [err, setErr] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clientName || !make || !model || !plate || !complaint) {
       setErr('Completa cliente, vehículo (marca, modelo, placa) y motivo.');
       return;
     }
-    const order = store.createOrder({
-      clientName,
-      clientPhone,
-      vehicle: { make, model, year: parseInt(year) || new Date().getFullYear(), plate, color: color || 'N/A' },
-      complaint,
-      mechanicId: mechanicId || null,
-    });
-    if (order) onCreated(order);
+    setSaving(true);
+    try {
+      const order = await store.createOrder({
+        clientName,
+        clientPhone,
+        vehicle: { make, model, year: parseInt(year) || new Date().getFullYear(), plate, color: color || 'N/A' },
+        complaint,
+        mechanicId: mechanicId || null,
+      });
+      onCreated(order);
+    } catch (createError) {
+      setErr(createError instanceof Error ? createError.message : 'No se pudo crear la orden.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -194,7 +194,8 @@ function NewOrderForm({ store, onCreated }: { store: Store; onCreated: (o: Order
 
       <button
         type="submit"
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-4 text-lg font-bold text-white transition active:scale-95 hover:bg-emerald-500"
+        disabled={saving}
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-4 text-lg font-bold text-white transition active:scale-95 hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <Plus className="h-5 w-5" /> Crear orden
       </button>
@@ -239,8 +240,11 @@ function AdminOrderDetail({ order, store, onBack }: { order: Order; store: Store
               <p className="text-sm text-slate-300">{current.code} · {current.vehicle.plate} · {current.vehicle.year}</p>
             </div>
           </div>
-          <div className="mt-3">
+          <div className="mt-3 flex items-center justify-between gap-3">
             <StatusBadge status={current.status} size="lg" />
+            <button onClick={() => openWhatsApp(current)} className="flex min-h-12 items-center gap-2 rounded-xl bg-green-600 px-4 text-sm font-bold text-white hover:bg-green-500">
+              <MessageCircle className="h-5 w-5" /> WhatsApp
+            </button>
           </div>
         </div>
       </header>
@@ -252,7 +256,7 @@ function AdminOrderDetail({ order, store, onBack }: { order: Order; store: Store
             <Info icon={Car} label="Vehículo" value={`${current.vehicle.make} ${current.vehicle.model} ${current.vehicle.year}`} />
             <Info icon={FileText} label="Color" value={current.vehicle.color} />
             <Info icon={Users} label="Cliente" value={current.clientName} />
-            <Info icon={Phone} label="Teléfono" value={current.vehicle.plate} />
+            <Info icon={Phone} label="Teléfono" value={current.clientPhone ?? 'No registrado'} />
           </div>
           <div className="mt-3 border-t border-slate-100 pt-3">
             <p className="text-xs font-semibold uppercase text-slate-400">Motivo de ingreso</p>
@@ -267,7 +271,7 @@ function AdminOrderDetail({ order, store, onBack }: { order: Order; store: Store
           </h2>
           <select
             value={current.mechanicId ?? ''}
-            onChange={(e) => store.assignMechanic(current.id, e.target.value || null)}
+            onChange={(e) => { void store.assignMechanic(current.id, e.target.value || null); }}
             className="mt-3 w-full rounded-xl border-2 border-slate-200 p-3 text-base outline-none focus:border-emerald-500"
           >
             <option value="">Sin asignar</option>
@@ -286,7 +290,7 @@ function AdminOrderDetail({ order, store, onBack }: { order: Order; store: Store
             {STATUS_ORDER.map((s) => (
               <button
                 key={s}
-                onClick={() => store.changeStatus(current.id, s, 'Cambio manual', 'Don Ramiro')}
+                onClick={() => { void store.changeStatus(current.id, s, 'Cambio manual', 'Don Ramiro'); }}
                 className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
                   current.status === s
                     ? 'bg-slate-900 text-white'
@@ -345,7 +349,7 @@ function AdminOrderDetail({ order, store, onBack }: { order: Order; store: Store
 
         <div className="flex justify-center pt-2">
           <button
-            onClick={store.resetData}
+            onClick={() => { void store.resetData(); }}
             className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-red-500"
           >
             <Trash2 className="h-3.5 w-3.5" /> Restablecer datos de ejemplo
@@ -356,8 +360,8 @@ function AdminOrderDetail({ order, store, onBack }: { order: Order; store: Store
       {showQuote && (
         <NewQuoteModal
           onClose={() => setShowQuote(false)}
-          onSubmit={(detail, amount) => {
-            store.addQuote(current.id, { detail, amount }, 'Don Ramiro');
+          onSubmit={async (detail, amount) => {
+            await store.addQuote(current.id, { detail, amount }, 'Don Ramiro');
             setShowQuote(false);
           }}
         />
@@ -377,19 +381,19 @@ function Info({ icon: Icon, label, value }: { icon: React.ElementType; label: st
   );
 }
 
-function NewQuoteModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (detail: string, amount: number) => void }) {
+function NewQuoteModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (detail: string, amount: number) => Promise<void> }) {
   const [detail, setDetail] = useState('');
   const [amount, setAmount] = useState('');
   const [err, setErr] = useState('');
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const amt = parseFloat(amount);
     if (!detail || !amt || amt <= 0) {
       setErr('Describe la reparación y un monto válido.');
       return;
     }
-    onSubmit(detail, amt);
+    await onSubmit(detail, amt);
   };
 
   return (

@@ -6,10 +6,11 @@ interface Props {
   approval?: Approval;
   /** client mode shows big approve/reject buttons */
   clientMode?: boolean;
-  onDecide?: (decision: 'aprobada' | 'rechazada') => void;
+  onDecide?: (decision: 'aprobada' | 'rechazada') => void | Promise<void>;
+  busy?: boolean;
 }
 
-export function QuoteCard({ quote, approval, clientMode, onDecide }: Props) {
+export function QuoteCard({ quote, approval, clientMode, onDecide, busy = false }: Props) {
   const status = approval?.status ?? 'pendiente';
   const pending = status === 'pendiente';
 
@@ -47,13 +48,15 @@ export function QuoteCard({ quote, approval, clientMode, onDecide }: Props) {
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => onDecide('aprobada')}
-                className="rounded-xl bg-emerald-600 px-4 py-4 text-lg font-bold text-white shadow-sm transition active:scale-95 hover:bg-emerald-500"
+                disabled={busy}
+                className="min-h-12 rounded-xl bg-emerald-600 px-4 py-4 text-lg font-bold text-white shadow-sm transition active:scale-95 hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Aprobar
               </button>
               <button
                 onClick={() => onDecide('rechazada')}
-                className="rounded-xl bg-red-600 px-4 py-4 text-lg font-bold text-white shadow-sm transition active:scale-95 hover:bg-red-500"
+                disabled={busy}
+                className="min-h-12 rounded-xl bg-red-600 px-4 py-4 text-lg font-bold text-white shadow-sm transition active:scale-95 hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Rechazar
               </button>

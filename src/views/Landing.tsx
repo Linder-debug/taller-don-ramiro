@@ -9,7 +9,7 @@ export function Landing({ onPick }: { onPick: (r: Role) => void }) {
         <div className="mx-auto max-w-md">
           <div className="flex items-center gap-2 text-emerald-400">
             <Wrench className="h-6 w-6" />
-            <span className="text-sm font-bold uppercase tracking-wider">Taller de Don Ramiro</span>
+            <span className="text-sm font-bold uppercase tracking-wider">Taller Don Ramiro</span>
           </div>
           <h1 className="mt-3 text-4xl font-extrabold leading-tight">Tu carro,<br />siempre en buenas manos.</h1>
           <p className="mt-3 text-slate-400">Sigue el estado de tu vehículo en tiempo real, sin llamar al taller.</p>
@@ -44,7 +44,7 @@ export function Landing({ onPick }: { onPick: (r: Role) => void }) {
 
         <div className="mt-10 rounded-xl bg-slate-900 p-4 text-center">
           <p className="text-xs text-slate-500">
-            Prototipo · datos guardados localmente en este navegador.
+            Seguimiento seguro de órdenes y cotizaciones.
           </p>
         </div>
       </main>

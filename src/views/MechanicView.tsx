@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Wrench, ChevronRight, ClipboardList, RefreshCw, Check, Search } from 'lucide-react';
+import { Wrench, ChevronRight, ClipboardList, RefreshCw, Check, Search, MessageCircle } from 'lucide-react';
 import type { Store } from '@/lib/store';
 import type { Order, OrderStatus } from '@/types';
 import { STATUS_CONFIG, STATUS_ORDER, statusIndex } from '@/lib/status';
 import { StatusBadge } from '@/components/StatusBadge';
 import { StatusActions } from '@/components/StatusActions';
 import { elapsedSince, formatTime } from '@/lib/format';
+import { openWhatsApp } from '@/lib/whatsapp';
 
 export function MechanicView({ store }: { store: Store }) {
   const [mechId, setMechId] = useState<string | null>(null);
@@ -26,8 +27,8 @@ export function MechanicView({ store }: { store: Store }) {
         order={currentActive}
         mechName={mech?.name ?? ''}
         onBack={() => setActive(null)}
-        onStatus={(s, note) => {
-          store.changeStatus(currentActive.id, s, note, mech?.name);
+        onStatus={async (s, note) => {
+          await store.changeStatus(currentActive.id, s, note, mech?.name);
           setActive(null);
         }}
       />

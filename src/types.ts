@@ -59,6 +59,8 @@ export interface Order {
   code: string;
   clientId: string;
   clientName: string;
+  clientPhone?: string;
+  accessToken?: string;
   vehicle: Vehicle;
   mechanicId: string | null;
   mechanicName: string | null;
