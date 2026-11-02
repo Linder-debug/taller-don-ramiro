@@ -86,4 +86,4 @@ npm run dev
 
 ## ✅ Pruebas realizadas
 - Suite de pruebas de backend contra la base real: acceso anónimo bloqueado a tablas (RLS), RPC de consulta con token válido/inválido, flujo completo de decisión de aprobación (aprobar, verificar persistencia, revertir), y operaciones CRUD del taller autenticado con aislamiento entre talleres.
-- Pruebas visuales en dos navegadores simultáneos sobre la URL pública: actualización en un navegador visible en el otro, aprobación persistente, y pruebas negativas de autenticación.
+- Pruebas visuales sobre la URL pública: actualización de una orden desde el panel del taller visible al recargar la vista del cliente, aprobación de cotización con persistencia verificada en la base de datos, y pruebas negativas (token alterado y contraseña incorrecta rechazados). Las pruebas de cliente se ejecutaron en contexto anónimo (sin sesión iniciada) y la persistencia se verificó de forma independiente contra la base.
