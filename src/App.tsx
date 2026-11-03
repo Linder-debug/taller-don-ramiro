@@ -81,12 +81,21 @@ function WorkshopGate({ role, store, onBack }: WorkshopGateProps) {
     return () => { active = false; };
   }, [store]);
 
+  useEffect(() => {
+    if (!checking) return undefined;
+    const timer = window.setTimeout(() => {
+      setChecking(false);
+      setError((current) => current || 'La verificación está tardando más de lo normal. Revisa tu conexión, vuelve a ingresar tus datos y pulsa "Entrar al taller" para reintentar.');
+    }, 20000);
+    return () => window.clearTimeout(timer);
+  }, [checking]);
+
   const signIn = async (event: React.FormEvent) => {
     event.preventDefault();
     setError('');
     setChecking(true);
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (signInError) throw signInError;
       if (!data.user) throw new Error('No se pudo iniciar sesión.');
       const { data: workshopUser, error: accessError } = await supabase
