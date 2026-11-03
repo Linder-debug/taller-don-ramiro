@@ -85,5 +85,29 @@ npm run dev
 ```
 
 ## ✅ Pruebas realizadas
-- Suite de pruebas de backend contra la base real: acceso anónimo bloqueado a tablas (RLS), RPC de consulta con token válido/inválido, flujo completo de decisión de aprobación (aprobar, verificar persistencia, revertir), y operaciones CRUD del taller autenticado con aislamiento entre talleres.
+- Suite de pruebas de backend contra la base real: acceso anónimo bloqueado a tablas (RLS), RPC de consulta con token válido/inválido, flujo completo de decisión de aprobación (aprobar, verificar persistencia, revertir), y operaciones CRUD del taller autenticado. (El proyecto opera con un único taller; ver 'Límites conocidos'.)
 - Pruebas visuales sobre la URL pública: actualización de una orden desde el panel del taller visible al recargar la vista del cliente, aprobación de cotización con persistencia verificada en la base de datos, y pruebas negativas (token alterado y contraseña incorrecta rechazados). Las pruebas de cliente se ejecutaron en contexto anónimo (sin sesión iniciada) y la persistencia se verificó de forma independiente contra la base.
+
+---
+
+## 🔧 Mantenimiento: corrección del bloqueo al recargar (nov 2026)
+
+### Causa
+El efecto de verificación de sesión del panel (`WorkshopGate` en `src/App.tsx`) dependía del objeto `store` completo. Como `useStore()` devuelve un objeto nuevo en cada render, cada carga de datos volvía a ejecutar el efecto y su limpieza cancelaba la autorización antes de completarla. Al recargar con sesión guardada esto producía un bucle infinito de verificación (cientos de consultas repetidas por minuto) y la pantalla quedaba en "Verificando acceso..." indefinidamente. El primer inicio de sesión no lo mostraba porque esa ruta autoriza de forma directa.
+
+### Corrección
+El efecto ahora depende de `store.loadWorkshopData` (referencia estable). Además, si la verificación supera 20 segundos se muestra un aviso con opción de reintentar en lugar del spinner infinito.
+
+### Cómo se verificó
+- Recarga con sesión guardada: 3/3 entra al panel en ~1,5 s (antes: 3/3 bloqueado).
+- Conteo de peticiones: 7 consultas al cargar y 0 adicionales en 15 s (antes: repetición infinita).
+- Login nuevo ~4 s; contraseña incorrecta rechazada en ~1 s con mensaje claro; vista del cliente con enlace real ~2 s.
+- Políticas RLS leídas en vivo desde `pg_policies` y funciones revisadas (`security definer`).
+
+### Límites conocidos
+- **Sin separación de roles:** hay un solo nivel de acceso al taller. Cualquier cuenta en `workshop_users` puede abrir tanto el panel de mecánico como el de administración (la diferencia es solo el botón de entrada); la base de datos aplica `is_workshop_member()` sin distinguir roles.
+- **Un solo taller:** `is_workshop_member()` no acota por taller; el diseño asume un único taller por proyecto.
+- **Recuperación de contraseña:** con el servicio de correo por defecto de Supabase, los correos solo se entregan a miembros del equipo del proyecto y con un límite bajo (del orden de 2 por hora, variable). Para uso real conviene configurar un SMTP propio.
+- **Sin auto-refresco del panel:** el panel se actualiza al actuar (cambiar estado, crear orden o cotización) o al recargar; no se actualiza solo cuando el cliente responde una cotización.
+- **Registro a nivel API abierto:** `disable_signup=false`. Una cuenta creada sin fila en `workshop_users` no ve datos (RLS), pero conviene decidir si se cierra el registro o se agrega un flujo de invitación.
+
