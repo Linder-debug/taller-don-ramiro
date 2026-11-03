@@ -107,7 +107,7 @@ El efecto ahora depende de `store.loadWorkshopData` (referencia estable). Ademá
 ### Límites conocidos
 - **Sin separación de roles:** hay un solo nivel de acceso al taller. Cualquier cuenta en `workshop_users` puede abrir tanto el panel de mecánico como el de administración (la diferencia es solo el botón de entrada); la base de datos aplica `is_workshop_member()` sin distinguir roles.
 - **Un solo taller:** `is_workshop_member()` no acota por taller; el diseño asume un único taller por proyecto.
-- **Recuperación de contraseña:** con el servicio de correo por defecto de Supabase, los correos solo se entregan a miembros del equipo del proyecto y con un límite bajo (del orden de 2 por hora, variable). Para uso real conviene configurar un SMTP propio.
+- **Recuperación de contraseña:** implementada (solicitud desde la pantalla de ingreso y pantalla de nueva contraseña al abrir el enlace del correo). El flujo completo fue verificado por el usuario el 2 nov 2026. El servicio de correo por defecto de Supabase solo entrega a miembros del equipo del proyecto y con un límite bajo (del orden de 2 por hora, variable); para más cuentas o uso intensivo conviene configurar un SMTP propio.
 - **Sin auto-refresco del panel:** el panel se actualiza al actuar (cambiar estado, crear orden o cotización) o al recargar; no se actualiza solo cuando el cliente responde una cotización.
 - **Registro a nivel API abierto:** `disable_signup=false`. Una cuenta creada sin fila en `workshop_users` no ve datos (RLS), pero conviene decidir si se cierra el registro o se agrega un flujo de invitación.
 
