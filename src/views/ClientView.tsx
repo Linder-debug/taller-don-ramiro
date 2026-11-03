@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Car, Wrench, Clock, CheckCircle2, AlertTriangle, Phone, ArrowLeft } from 'lucide-react';
+import { Car, Wrench, Clock, CheckCircle2, AlertTriangle, Phone, ArrowLeft } from 'lucide-react';
 import type { Store } from '@/lib/store';
 import type { Order } from '@/types';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -16,7 +16,6 @@ function getTrackingParams() {
 
 export function ClientView({ store }: { store: Store }) {
   const initialLink = getTrackingParams();
-  const [query, setQuery] = useState(initialLink.code);
   const [token, setToken] = useState(initialLink.token);
   const [found, setFound] = useState<Order | null>(null);
   const [error, setError] = useState('');
@@ -34,7 +33,6 @@ export function ClientView({ store }: { store: Store }) {
         return;
       }
       setFound(order);
-      setQuery(order.code);
       setToken(accessToken);
     } catch (loadError) {
       setFound(null);
@@ -53,14 +51,6 @@ export function ClientView({ store }: { store: Store }) {
     }
     void loadOrder(initialLink.code, initialLink.token);
   }, [store.trackOrder]);
-
-  const search = (event: React.FormEvent) => {
-    event.preventDefault();
-    const code = query.trim().toUpperCase();
-    if (!code) return;
-    setFound(null);
-    setError('Para consultar tu orden necesitas abrir el enlace completo enviado por el taller.');
-  };
 
   if (found) {
     return (
@@ -83,7 +73,6 @@ export function ClientView({ store }: { store: Store }) {
         }}
         onBack={() => {
           setFound(null);
-          setQuery('');
           setToken('');
         }}
       />
@@ -104,27 +93,21 @@ export function ClientView({ store }: { store: Store }) {
       </header>
 
       <main className="mx-auto -mt-4 max-w-md px-5">
-        <form onSubmit={search} className="rounded-2xl bg-white p-4 shadow-lg ring-1 ring-slate-200">
-          <label className="block text-sm font-semibold text-slate-700">Número de orden</label>
-          <div className="mt-2 flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Ej: TR-1043"
-                className="w-full rounded-xl border-2 border-slate-200 py-3 pl-10 pr-3 text-lg font-medium text-slate-900 outline-none focus:border-emerald-500"
-                autoCapitalize="characters"
-              />
+        <div className="rounded-2xl bg-white p-4 shadow-lg ring-1 ring-slate-200">
+          {loading && <p className="text-sm font-medium text-slate-500">Consultando tu orden…</p>}
+          {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p>}
+          {!loading && (
+            <div className={error ? 'mt-3' : ''}>
+              <h2 className="text-base font-bold text-slate-900">¿Cómo consulto mi orden?</h2>
+              <p className="mt-2 text-sm text-slate-600">
+                Abre el enlace de seguimiento que el taller te envió por WhatsApp. Ese enlace ya incluye tu número de orden y un código privado, así que no necesitas buscar por placa ni por número de orden.
+              </p>
+              <p className="mt-2 text-sm text-slate-600">
+                Si no encuentras el enlace, pídele al taller que te lo reenvíe.
+              </p>
             </div>
-            <button type="submit" className="rounded-xl bg-emerald-600 px-5 text-base font-bold text-white transition active:scale-95 hover:bg-emerald-500">
-              Buscar
-            </button>
-          </div>
-          {error && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p>}
-          {loading && <p className="mt-3 text-sm font-medium text-slate-500">Consultando tu orden…</p>}
-          <p className="mt-3 text-xs text-slate-400">El enlace incluye un código privado para proteger la información de tu vehículo.</p>
-        </form>
+          )}
+        </div>
       </main>
     </div>
   );
