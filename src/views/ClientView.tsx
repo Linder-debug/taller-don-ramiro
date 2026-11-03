@@ -20,11 +20,14 @@ export function ClientView({ store }: { store: Store }) {
   const [found, setFound] = useState<Order | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(Boolean(initialLink.code || initialLink.token));
+  const [slow, setSlow] = useState(false);
   const [deciding, setDeciding] = useState(false);
 
   const loadOrder = async (code: string, accessToken: string) => {
     setLoading(true);
     setError('');
+    setSlow(false);
+    const slowTimer = window.setTimeout(() => setSlow(true), 20000);
     try {
       const order = await store.trackOrder(code.toUpperCase(), accessToken);
       if (!order) {
@@ -38,6 +41,8 @@ export function ClientView({ store }: { store: Store }) {
       setFound(null);
       setError(loadError instanceof Error ? loadError.message : 'No se pudo consultar la orden.');
     } finally {
+      window.clearTimeout(slowTimer);
+      setSlow(false);
       setLoading(false);
     }
   };
@@ -94,7 +99,12 @@ export function ClientView({ store }: { store: Store }) {
 
       <main className="mx-auto -mt-4 max-w-md px-5">
         <div className="rounded-2xl bg-white p-4 shadow-lg ring-1 ring-slate-200">
-          {loading && <p className="text-sm font-medium text-slate-500">Consultando tu orden…</p>}
+          {loading && (
+            <div>
+              <p className="text-sm font-medium text-slate-500">Consultando tu orden…</p>
+              {slow && <p className="mt-2 text-sm text-slate-500">La conexión está tardando más de lo normal. Si sigue así, vuelve a abrir el enlace que te envió el taller.</p>}
+            </div>
+          )}
           {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p>}
           {!loading && (
             <div className={error ? 'mt-3' : ''}>
