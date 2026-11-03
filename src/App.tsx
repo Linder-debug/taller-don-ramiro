@@ -46,6 +46,8 @@ function WorkshopGate({ role, store, onBack }: WorkshopGateProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  const loadWorkshopData = store.loadWorkshopData;
+
   useEffect(() => {
     let active = true;
     const checkSession = async () => {
@@ -73,13 +75,13 @@ function WorkshopGate({ role, store, onBack }: WorkshopGateProps) {
         await supabase.auth.signOut();
         throw new Error('Sin acceso al taller');
       }
-      await store.loadWorkshopData();
+      await loadWorkshopData();
       if (active) setAuthorized(true);
     };
 
     void checkSession();
     return () => { active = false; };
-  }, [store]);
+  }, [loadWorkshopData]);
 
   useEffect(() => {
     if (!checking) return undefined;
